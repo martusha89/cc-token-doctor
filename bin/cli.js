@@ -77,7 +77,7 @@ async function main() {
       `${ui.c.bold}Open the visual dashboard? ${ui.c.dim}[Y/n]${ui.c.reset} `
     );
     if (shouldOpen.toLowerCase() !== 'n') {
-      openDashboard(reportPath);
+      openDashboard(report);
     }
   }
 
@@ -326,34 +326,44 @@ function handleListPatches() {
   }
 }
 
-function openDashboard(reportPath) {
+function openDashboard(report) {
   const { execSync } = require('child_process');
   const fs = require('fs');
+  const os = require('os');
 
-  // Find dashboard HTML — check installed package location first, then relative
+  // Find dashboard HTML template
   const candidates = [
     path.join(__dirname, '..', 'dashboard', 'index.html'),
     path.join(process.cwd(), 'dashboard', 'index.html'),
   ];
-  const dashboardPath = candidates.find(f => fs.existsSync(f));
+  const templatePath = candidates.find(f => fs.existsSync(f));
 
-  if (!dashboardPath) {
-    ui.warning('Dashboard HTML not found locally.');
-    ui.dim('Visit the online dashboard and drop your report file in.');
+  if (!templatePath) {
+    ui.warning('Dashboard template not found.');
+    ui.dim(`Visit ${ui.c.cyan}https://aidhd.co/token-doctor${ui.c.reset} and drop your report file in.`);
     return;
   }
+
+  // Read the template and inject report data so it loads instantly
+  let html = fs.readFileSync(templatePath, 'utf8');
+  const injection = `<script>window.__CC_TOKEN_DOCTOR_REPORT__ = ${JSON.stringify(report)};</script>`;
+  html = html.replace('</head>', `${injection}\n</head>`);
+
+  // Save the self-contained report HTML
+  const outDir = path.join(os.homedir(), '.cc-token-doctor');
+  if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+  const outPath = path.join(outDir, 'report.html');
+  fs.writeFileSync(outPath, html, 'utf8');
 
   // Open in default browser
   const openCmd = process.platform === 'win32' ? 'start ""' :
                   process.platform === 'darwin' ? 'open' : 'xdg-open';
   try {
-    execSync(`${openCmd} "${dashboardPath}"`, { stdio: 'ignore' });
-    ui.ok('Dashboard opened in your browser. Drop the report file in!');
-    ui.dim(`Report file: ${reportPath}`);
+    execSync(`${openCmd} "${outPath}"`, { stdio: 'ignore' });
+    ui.ok('Dashboard opened in your browser — your results are already loaded.');
   } catch {
     ui.warning(`Couldn't open browser automatically.`);
-    ui.dim(`Open this file manually: ${dashboardPath}`);
-    ui.dim(`Then drop in: ${reportPath}`);
+    ui.dim(`Open this file: ${outPath}`);
   }
 }
 

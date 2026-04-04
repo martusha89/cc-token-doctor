@@ -1596,6 +1596,15 @@ body {
     if (file) loadFile(file);
   });
 
+  // ---- Auto-load embedded report data (injected by CLI) ----
+  if (window.__CC_TOKEN_DOCTOR_REPORT__) {
+    try {
+      renderDashboard(window.__CC_TOKEN_DOCTOR_REPORT__);
+    } catch (err) {
+      console.error('Failed to render embedded report:', err);
+    }
+  }
+
 })();
 </script>
 </body>

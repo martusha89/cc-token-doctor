@@ -1,6 +1,6 @@
 {
   "name": "cc-token-doctor",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Diagnose and fix Claude Code's token drain problem. Built on research by Rangizingo, flightlesstux, kitaekatt, and the Claude Code community.",
   "bin": {
     "cc-token-doctor": "bin/cli.js"

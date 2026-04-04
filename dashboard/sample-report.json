@@ -1,0 +1,190 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-04-04T14:30:00.000Z",
+  "generator": "cc-token-doctor",
+  "summary": {
+    "overallHealth": "critical",
+    "sessionCount": 23,
+    "totalTurns": 1847,
+    "dateRange": {
+      "from": "2026-03-25T08:12:00.000Z",
+      "to": "2026-04-04T13:45:00.000Z"
+    }
+  },
+  "cache": {
+    "status": "broken",
+    "hitRatio": 0.1423,
+    "creationRatio": 0.6891,
+    "uncachedRatio": 0.1686,
+    "cacheBreaks": 47,
+    "totals": {
+      "input": 28450000,
+      "cacheCreation": 116320000,
+      "cacheRead": 24020000,
+      "billed": 168790000
+    },
+    "timeline": [
+      { "timestamp": "2026-03-25T08:12:00Z", "ratio": 0.72, "total": 98000 },
+      { "timestamp": "2026-03-25T08:15:00Z", "ratio": 0.68, "total": 102000 },
+      { "timestamp": "2026-03-25T08:22:00Z", "ratio": 0.04, "total": 195000 },
+      { "timestamp": "2026-03-25T08:25:00Z", "ratio": 0.02, "total": 210000 },
+      { "timestamp": "2026-03-25T08:30:00Z", "ratio": 0.65, "total": 105000 },
+      { "timestamp": "2026-03-25T09:01:00Z", "ratio": 0.03, "total": 198000 },
+      { "timestamp": "2026-03-25T09:04:00Z", "ratio": 0.01, "total": 215000 },
+      { "timestamp": "2026-03-25T09:10:00Z", "ratio": 0.55, "total": 112000 },
+      { "timestamp": "2026-03-25T09:15:00Z", "ratio": 0.61, "total": 108000 },
+      { "timestamp": "2026-03-25T09:45:00Z", "ratio": 0.02, "total": 220000 },
+      { "timestamp": "2026-03-25T09:48:00Z", "ratio": 0.01, "total": 225000 },
+      { "timestamp": "2026-03-25T10:00:00Z", "ratio": 0.58, "total": 115000 },
+      { "timestamp": "2026-03-25T10:05:00Z", "ratio": 0.62, "total": 105000 },
+      { "timestamp": "2026-03-25T10:35:00Z", "ratio": 0.03, "total": 205000 },
+      { "timestamp": "2026-03-25T10:38:00Z", "ratio": 0.02, "total": 212000 },
+      { "timestamp": "2026-03-25T11:00:00Z", "ratio": 0.15, "total": 180000 },
+      { "timestamp": "2026-03-25T11:05:00Z", "ratio": 0.20, "total": 165000 },
+      { "timestamp": "2026-03-25T11:10:00Z", "ratio": 0.18, "total": 170000 },
+      { "timestamp": "2026-03-25T13:00:00Z", "ratio": 0.03, "total": 200000 },
+      { "timestamp": "2026-03-25T13:03:00Z", "ratio": 0.01, "total": 218000 },
+      { "timestamp": "2026-03-25T13:08:00Z", "ratio": 0.52, "total": 120000 },
+      { "timestamp": "2026-03-25T13:12:00Z", "ratio": 0.58, "total": 112000 },
+      { "timestamp": "2026-03-25T14:00:00Z", "ratio": 0.04, "total": 195000 },
+      { "timestamp": "2026-03-25T14:03:00Z", "ratio": 0.02, "total": 210000 },
+      { "timestamp": "2026-03-26T09:00:00Z", "ratio": 0.01, "total": 230000 },
+      { "timestamp": "2026-03-26T09:03:00Z", "ratio": 0.01, "total": 225000 },
+      { "timestamp": "2026-03-26T09:08:00Z", "ratio": 0.45, "total": 130000 },
+      { "timestamp": "2026-03-26T09:12:00Z", "ratio": 0.50, "total": 125000 },
+      { "timestamp": "2026-03-26T09:40:00Z", "ratio": 0.03, "total": 205000 },
+      { "timestamp": "2026-03-26T09:43:00Z", "ratio": 0.02, "total": 210000 },
+      { "timestamp": "2026-03-27T15:00:00Z", "ratio": 0.65, "total": 100000 },
+      { "timestamp": "2026-03-27T15:05:00Z", "ratio": 0.70, "total": 95000 },
+      { "timestamp": "2026-03-27T15:30:00Z", "ratio": 0.04, "total": 198000 },
+      { "timestamp": "2026-03-27T15:33:00Z", "ratio": 0.02, "total": 215000 },
+      { "timestamp": "2026-03-28T12:00:00Z", "ratio": 0.01, "total": 235000 },
+      { "timestamp": "2026-03-28T12:03:00Z", "ratio": 0.01, "total": 228000 },
+      { "timestamp": "2026-03-28T12:08:00Z", "ratio": 0.35, "total": 145000 },
+      { "timestamp": "2026-03-28T12:30:00Z", "ratio": 0.03, "total": 200000 },
+      { "timestamp": "2026-03-29T10:00:00Z", "ratio": 0.12, "total": 185000 },
+      { "timestamp": "2026-03-29T10:05:00Z", "ratio": 0.15, "total": 175000 },
+      { "timestamp": "2026-03-30T16:00:00Z", "ratio": 0.02, "total": 220000 },
+      { "timestamp": "2026-03-30T16:03:00Z", "ratio": 0.01, "total": 225000 },
+      { "timestamp": "2026-03-31T14:00:00Z", "ratio": 0.55, "total": 115000 },
+      { "timestamp": "2026-03-31T14:30:00Z", "ratio": 0.03, "total": 205000 },
+      { "timestamp": "2026-04-01T09:00:00Z", "ratio": 0.01, "total": 232000 },
+      { "timestamp": "2026-04-01T09:03:00Z", "ratio": 0.02, "total": 220000 },
+      { "timestamp": "2026-04-02T13:00:00Z", "ratio": 0.08, "total": 190000 },
+      { "timestamp": "2026-04-02T13:05:00Z", "ratio": 0.10, "total": 185000 },
+      { "timestamp": "2026-04-03T15:00:00Z", "ratio": 0.04, "total": 202000 },
+      { "timestamp": "2026-04-04T12:00:00Z", "ratio": 0.01, "total": 240000 }
+    ]
+  },
+  "peakHours": {
+    "status": "heavy",
+    "peakRatio": 0.5832,
+    "peakTurns": 1077,
+    "offPeakTurns": 770,
+    "hourDistribution": [12, 8, 3, 1, 0, 15, 45, 89, 156, 198, 187, 142, 108, 135, 122, 98, 112, 87, 45, 32, 18, 12, 8, 14]
+  },
+  "tokenBurn": {
+    "status": "spiking",
+    "avgPerTurn": 91340,
+    "medianPerTurn": 78200,
+    "p95PerTurn": 224500,
+    "grandTotal": 168790000,
+    "spikeCount": 23,
+    "estimatedCost": 1847.53,
+    "timeline": [
+      { "timestamp": "2026-03-25T08:12:00Z", "total": 98000 },
+      { "timestamp": "2026-03-25T08:22:00Z", "total": 195000 },
+      { "timestamp": "2026-03-25T08:30:00Z", "total": 105000 },
+      { "timestamp": "2026-03-25T09:01:00Z", "total": 298000 },
+      { "timestamp": "2026-03-25T09:10:00Z", "total": 112000 },
+      { "timestamp": "2026-03-25T09:45:00Z", "total": 320000 },
+      { "timestamp": "2026-03-25T10:00:00Z", "total": 115000 },
+      { "timestamp": "2026-03-25T10:35:00Z", "total": 285000 },
+      { "timestamp": "2026-03-25T11:00:00Z", "total": 180000 },
+      { "timestamp": "2026-03-25T13:00:00Z", "total": 300000 },
+      { "timestamp": "2026-03-25T13:08:00Z", "total": 120000 },
+      { "timestamp": "2026-03-25T14:00:00Z", "total": 295000 },
+      { "timestamp": "2026-03-26T09:00:00Z", "total": 330000 },
+      { "timestamp": "2026-03-26T09:08:00Z", "total": 130000 },
+      { "timestamp": "2026-03-26T09:40:00Z", "total": 305000 },
+      { "timestamp": "2026-03-27T15:00:00Z", "total": 100000 },
+      { "timestamp": "2026-03-27T15:30:00Z", "total": 298000 },
+      { "timestamp": "2026-03-28T12:00:00Z", "total": 335000 },
+      { "timestamp": "2026-03-28T12:30:00Z", "total": 300000 },
+      { "timestamp": "2026-03-29T10:00:00Z", "total": 185000 },
+      { "timestamp": "2026-03-30T16:00:00Z", "total": 320000 },
+      { "timestamp": "2026-03-31T14:30:00Z", "total": 305000 },
+      { "timestamp": "2026-04-01T09:00:00Z", "total": 332000 },
+      { "timestamp": "2026-04-02T13:00:00Z", "total": 290000 },
+      { "timestamp": "2026-04-03T15:00:00Z", "total": 302000 },
+      { "timestamp": "2026-04-04T12:00:00Z", "total": 340000 }
+    ]
+  },
+  "cacheTTL": {
+    "status": "suboptimal",
+    "oneHourRatio": 0.0823,
+    "fiveMinTotal": 106750000,
+    "oneHourTotal": 9570000
+  },
+  "sessions": {
+    "status": "broken",
+    "totalSessions": 23,
+    "totalResumes": 89,
+    "resumeBreaks": 47,
+    "resumeSuccessRate": 0.4719
+  },
+  "verdict": [
+    "Your prompt cache is broken. The system is re-reading your entire context on almost every message instead of using cached data. This is the #1 reason tokens vanish.",
+    "More than half your usage falls during Anthropic's peak hours (weekdays 5-11am PT). Limits burn faster during these windows.",
+    "Your cache is using 5-minute TTL instead of 1-hour. Every time you pause for more than 5 minutes, the entire cache expires and gets re-billed.",
+    "Session resumes are consistently breaking the cache. When you come back to a session, the cache prefix doesn't match — so everything gets re-read at full price.",
+    "You have 23 token spikes — individual turns that consumed 3x+ the normal amount. This could indicate counter desync bugs."
+  ],
+  "recommendations": [
+    {
+      "priority": "high",
+      "title": "Fix the prompt cache",
+      "description": "Apply the cache patches to restore proper caching. This alone can reduce token usage by 10-20x.",
+      "command": "npx cc-token-doctor --fix",
+      "fixId": "cache-patches"
+    },
+    {
+      "priority": "high",
+      "title": "Enable 1-hour cache TTL",
+      "description": "Your cache expires every 5 minutes. Forcing 1-hour TTL means pauses don't kill your cache. Reads cost 10x less than re-creating.",
+      "command": "npx cc-token-doctor --fix",
+      "fixId": "cache-ttl"
+    },
+    {
+      "priority": "medium",
+      "title": "Shift heavy work outside peak hours",
+      "description": "Anthropic throttles harder during weekdays 5-11am PT (1-7pm UK, 8am-2pm ET). Try to do big refactors or multi-file work outside this window.",
+      "fixId": "peak-hours"
+    },
+    {
+      "priority": "medium",
+      "title": "Watch for token spikes",
+      "description": "23 turns used 3x+ the normal tokens. If your usage meter jumps from 20% to 80% on a single prompt, that's a known counter desync bug — report it on GitHub.",
+      "fixId": "spikes"
+    },
+    {
+      "priority": "low",
+      "title": "Use /compact in long sessions",
+      "description": "After 30+ messages, your context window fills up and every turn gets expensive. Use /compact to summarize and shrink the conversation.",
+      "fixId": "compact"
+    },
+    {
+      "priority": "low",
+      "title": "Audit your MCP servers",
+      "description": "Each connected MCP server adds tool schemas to every request. 5+ servers can add 10K+ tokens to your system prompt. Disable ones you're not using.",
+      "fixId": "mcp-audit"
+    },
+    {
+      "priority": "low",
+      "title": "Set the attribution header workaround",
+      "description": "Setting CLAUDE_CODE_ATTRIBUTION_HEADER=0 prevents a fingerprint hash that can break cache key stability between turns.",
+      "command": "export CLAUDE_CODE_ATTRIBUTION_HEADER=0",
+      "fixId": "attribution-header"
+    }
+  ]
+}

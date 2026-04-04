@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CC Token Doctor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ========== RESET & BASE ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0f;
+  --card: #12121a;
+  --border: #1e1e2e;
+  --text: #e4e4eb;
+  --text-dim: #8888a0;
+  --text-muted: #55556a;
+  --accent: #a855f7;
+  --accent-glow: rgba(168, 85, 247, 0.15);
+  --green: #22c55e;
+  --yellow: #eab308;
+  --red: #ef4444;
+  --green-bg: rgba(34, 197, 94, 0.1);
+  --yellow-bg: rgba(234, 179, 8, 0.1);
+  --red-bg: rgba(239, 68, 68, 0.1);
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+
+html { font-size: 16px; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========== LAYOUT ========== */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ========== HEADER ========== */
+.header {
+  text-align: center;
+  padding: 48px 0 32px;
+}
+
+.header h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, var(--accent) 0%, #c084fc 50%, #e9d5ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header .subtitle {
+  font-size: 1.1rem;
+  color: var(--text-dim);
+  margin-top: 6px;
+  font-weight: 400;
+}
+
+.header .credit {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 12px;
+}
+
+/* ========== DROP ZONE ========== */
+.drop-zone-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+  padding: 40px 0 80px;
+  animation: fadeUp 0.5s ease both;
+}
+
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 64px 48px;
+  text-align: center;
+  max-width: 560px;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: var(--card);
+  position: relative;
+}
+
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+  transform: translateY(-2px);
+}
+
+.drop-zone.drag-over {
+  box-shadow: 0 0 40px rgba(168, 85, 247, 0.15);
+}
+
+.drop-zone .icon {
+  font-size: 3.5rem;
+  margin-bottom: 16px;
+  display: block;
+  opacity: 0.8;
+}
+
+.drop-zone h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.drop-zone p {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+  line-height: 1.7;
+}
+
+.drop-zone code {
+  background: rgba(168, 85, 247, 0.12);
+  color: var(--accent);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+}
+
+.btn-choose {
+  display: inline-block;
+  padding: 10px 28px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.btn-choose:hover {
+  background: #9333ea;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.3);
+}
+
+.drop-zone .or-text {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin: 16px 0;
+}
+
+#file-input { display: none; }
+
+/* ========== ERROR TOAST ========== */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--red);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 100;
+  transition: transform 0.3s ease;
+  pointer-events: none;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ========== DASHBOARD ========== */
+.dashboard {
+  display: none;
+  padding-bottom: 80px;
+}
+
+.dashboard.active { display: block; }
+
+/* Overall health bar */
+.health-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 32px;
+  margin-bottom: 28px;
+  animation: fadeUp 0.4s ease both;
+}
+
+.health-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.status-badge.healthy { background: var(--green-bg); color: var(--green); border: 1px solid rgba(34, 197, 94, 0.25); }
+.status-badge.degraded { background: var(--yellow-bg); color: var(--yellow); border: 1px solid rgba(234, 179, 8, 0.25); }
+.status-badge.critical { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.25); }
+
+.status-badge .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-badge.healthy .dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
+.status-badge.degraded .dot { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
+.status-badge.critical .dot { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+.health-meta {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+.health-meta strong { color: var(--text); font-weight: 600; }
+
+/* Cards grid */
+.cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  opacity: 0;
+  animation: fadeUp 0.5s ease forwards;
+}
+
+.card:nth-child(1) { animation-delay: 0.08s; }
+.card:nth-child(2) { animation-delay: 0.16s; }
+.card:nth-child(3) { animation-delay: 0.24s; }
+.card:nth-child(4) { animation-delay: 0.32s; }
+.card:nth-child(5) { animation-delay: 0.40s; }
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.card-icon.purple { background: rgba(168, 85, 247, 0.12); }
+.card-icon.green { background: rgba(34, 197, 94, 0.12); }
+.card-icon.yellow { background: rgba(234, 179, 8, 0.12); }
+.card-icon.red { background: rgba(239, 68, 68, 0.12); }
+.card-icon.blue { background: rgba(59, 130, 246, 0.12); }
+
+.card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.card-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Cache ring */
+.cache-ring-container {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  margin-bottom: 20px;
+}
+
+.ring-wrapper {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+}
+
+.ring-wrapper svg {
+  width: 140px;
+  height: 140px;
+  transform: rotate(-90deg);
+}
+
+.ring-bg {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 10;
+}
+
+.ring-fill {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.2s ease, stroke 0.5s ease;
+}
+
+.ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring-text .pct {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.ring-text .label {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.cache-explain {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+
+.cache-explain strong { color: var(--text); }
+
+/* Breakdown bar */
+.breakdown-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--border);
+  margin-top: 16px;
+}
+
+.breakdown-bar .segment {
+  height: 100%;
+  transition: width 0.8s ease;
+}
+
+.breakdown-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* TTL card */
+.ttl-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.ttl-status.good { background: var(--green-bg); border: 1px solid rgba(34, 197, 94, 0.15); }
+.ttl-status.bad { background: var(--red-bg); border: 1px solid rgba(239, 68, 68, 0.15); }
+.ttl-status.mixed { background: var(--yellow-bg); border: 1px solid rgba(234, 179, 8, 0.15); }
+
+.ttl-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.ttl-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ttl-bar-label {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  width: 52px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.ttl-bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ttl-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s ease;
+}
+
+.ttl-bar-value {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  width: 70px;
+  flex-shrink: 0;
+}
+
+/* Token chart */
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  margin-bottom: 16px;
+}
+
+.chart-container canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.token-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 12px;
+}
+
+.stat-box {
+  text-align: center;
+  padding: 10px 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.stat-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.stat-value.cost { color: var(--accent); }
+.stat-value.spike { color: var(--red); }
+
+/* Peak hours heatmap */
+.heatmap {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 3px;
+  margin-bottom: 12px;
+}
+
+.heat-cell {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  position: relative;
+  transition: transform 0.15s ease;
+  min-width: 0;
+}
+
+.heat-cell:hover {
+  transform: scale(1.3);
+  z-index: 2;
+}
+
+.heat-cell .tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a2e;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.heat-cell:hover .tooltip { display: block; }
+
+.heatmap-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  padding: 0 2px;
+}
+
+.peak-window-note {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  line-height: 1.6;
+}
+
+.peak-window-note strong { color: var(--text); }
+
+.peak-highlight {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.peak-highlight.heavy { background: var(--red-bg); color: var(--red); }
+.peak-highlight.moderate { background: var(--yellow-bg); color: var(--yellow); }
+.peak-highlight.minimal { background: var(--green-bg); color: var(--green); }
+
+/* Session resumes */
+.resume-bar-container {
+  margin-bottom: 16px;
+}
+
+.resume-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+
+.resume-bar-track {
+  width: 100%;
+  height: 14px;
+  background: var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.resume-bar-fill {
+  height: 100%;
+  border-radius: 7px;
+  transition: width 0.8s ease;
+}
+
+.resume-detail {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.7;
+  margin-top: 14px;
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+}
+
+.resume-detail strong { color: var(--text); }
+
+/* Verdict */
+.section-block {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: fadeUp 0.5s ease forwards;
+  animation-delay: 0.5s;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.verdict-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+}
+
+.verdict-line:last-child { border-bottom: none; }
+
+.verdict-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-size: 1rem;
+}
+
+/* Recommendations */
+.rec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rec-item {
+  display: flex;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid var(--border);
+  align-items: flex-start;
+}
+
+.rec-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  background: rgba(168, 85, 247, 0.12);
+  color: var(--accent);
+}
+
+.rec-body { flex: 1; min-width: 0; }
+
+.rec-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.rec-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.priority-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.priority-badge.high { background: var(--red-bg); color: var(--red); }
+.priority-badge.medium { background: var(--yellow-bg); color: var(--yellow); }
+.priority-badge.low { background: var(--green-bg); color: var(--green); }
+
+.rec-desc {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+.rec-command {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.15);
+  border-radius: 8px;
+  padding: 10px 14px;
+  overflow-x: auto;
+}
+
+.rec-command code {
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+  font-size: 0.82rem;
+  color: var(--accent);
+  flex: 1;
+  white-space: nowrap;
+}
+
+.btn-copy {
+  background: none;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  color: var(--accent);
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-copy:hover {
+  background: rgba(168, 85, 247, 0.15);
+}
+
+.btn-copy.copied {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+/* New report button */
+.new-report-bar {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.btn-new-report {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.btn-new-report:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 40px 0;
+  border-top: 1px solid var(--border);
+  margin-top: 20px;
+}
+
+.footer p {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.8;
+}
+
+.footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.footer a:hover { text-decoration: underline; }
+
+/* ========== ANIMATIONS ========== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .header h1 { font-size: 1.7rem; }
+  .header .subtitle { font-size: 0.95rem; }
+
+  .cards-grid { grid-template-columns: 1fr; }
+
+  .health-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
+  }
+
+  .health-meta { text-align: left; }
+
+  .cache-ring-container {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+  }
+
+  .heatmap { gap: 2px; }
+
+  .drop-zone { padding: 40px 24px; }
+
+  .section-block { padding: 20px; }
+
+  .token-stats { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 16px; }
+  .header { padding: 32px 0 24px; }
+  .header h1 { font-size: 1.4rem; }
+  .card { padding: 20px; }
+
+  .heatmap-labels span:nth-child(even) { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- HEADER -->
+  <header class="header">
+    <h1>&#x1FA7A; CC Token Doctor</h1>
+    <p class="subtitle">See what's eating your Claude Code tokens</p>
+    <p class="credit">Built on research by Rangizingo, flightlesstux, kitaekatt &amp; the Claude Code community</p>
+  </header>
+
+  <!-- DROP ZONE (before report loaded) -->
+  <div id="drop-zone-wrapper" class="drop-zone-wrapper">
+    <div id="drop-zone" class="drop-zone">
+      <span class="icon">&#128203;</span>
+      <h2>Drop your report here</h2>
+      <p>
+        Run <code>npx cc-token-doctor</code> in your terminal,<br>
+        then drop the generated report file here.
+      </p>
+      <p class="or-text">or</p>
+      <button class="btn-choose" id="btn-choose">Choose file</button>
+      <input type="file" id="file-input" accept=".json,application/json">
+    </div>
+  </div>
+
+  <!-- DASHBOARD (after report loaded) -->
+  <div id="dashboard" class="dashboard">
+
+    <!-- New report button -->
+    <div class="new-report-bar">
+      <button class="btn-new-report" id="btn-new-report">&#8592; Load a different report</button>
+    </div>
+
+    <!-- Overall Health -->
+    <div class="health-bar" id="health-bar"></div>
+
+    <!-- Cards -->
+    <div class="cards-grid" id="cards-grid"></div>
+
+    <!-- Verdict -->
+    <div class="section-block" id="verdict-section"></div>
+
+    <!-- Recommendations -->
+    <div class="section-block" id="rec-section" style="animation-delay: 0.6s;"></div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>
+        Built on research by
+        <a href="https://github.com/martusha89/cc-token-doctor" target="_blank" rel="noopener">Rangizingo</a> (cc-cache-fix),
+        flightlesstux, kitaekatt &amp; community
+      </p>
+      <p>
+        <a href="https://github.com/martusha89/cc-token-doctor" target="_blank" rel="noopener">GitHub</a>
+        &nbsp;&middot;&nbsp;
+        Made by Marta S. aka Firecracker
+      </p>
+    </footer>
+  </div>
+</div>
+
+<!-- Error toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================================================================
+   CC TOKEN DOCTOR — Dashboard Logic
+   ================================================================ */
+(function () {
+  'use strict';
+
+  // ---- DOM refs ----
+  const dropZoneWrapper = document.getElementById('drop-zone-wrapper');
+  const dropZone = document.getElementById('drop-zone');
+  const fileInput = document.getElementById('file-input');
+  const btnChoose = document.getElementById('btn-choose');
+  const dashboard = document.getElementById('dashboard');
+  const btnNewReport = document.getElementById('btn-new-report');
+  const toast = document.getElementById('toast');
+
+  // ---- Helpers ----
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3500);
+  }
+
+  function fmt(n) {
+    if (n == null) return '-';
+    if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+    return n.toLocaleString();
+  }
+
+  function pct(v) {
+    return Math.round((v || 0) * 100) + '%';
+  }
+
+  function statusColor(status) {
+    if (['healthy', 'normal', 'minimal', 'optimal'].includes(status)) return 'var(--green)';
+    if (['degraded', 'moderate', 'high', 'mixed', 'suboptimal'].includes(status)) return 'var(--yellow)';
+    return 'var(--red)';
+  }
+
+  function statusClass(status) {
+    if (['healthy', 'normal', 'minimal', 'optimal'].includes(status)) return 'healthy';
+    if (['degraded', 'moderate', 'high', 'mixed', 'suboptimal'].includes(status)) return 'degraded';
+    return 'critical';
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '?';
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function escapeHtml(s) {
+    const el = document.createElement('span');
+    el.textContent = s;
+    return el.innerHTML;
+  }
+
+  // ---- Drag & Drop ----
+  ['dragenter', 'dragover'].forEach(ev => {
+    dropZone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('drag-over'); });
+  });
+  ['dragleave', 'drop'].forEach(ev => {
+    dropZone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('drag-over'); });
+  });
+
+  dropZone.addEventListener('drop', e => {
+    const file = e.dataTransfer.files[0];
+    if (file) loadFile(file);
+  });
+
+  btnChoose.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) loadFile(fileInput.files[0]);
+  });
+
+  btnNewReport.addEventListener('click', () => {
+    dashboard.classList.remove('active');
+    dropZoneWrapper.style.display = 'flex';
+    fileInput.value = '';
+  });
+
+  function loadFile(file) {
+    if (!file.name.endsWith('.json') && file.type !== 'application/json') {
+      showToast('Please drop a JSON report file.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!data.summary || !data.cache) {
+          showToast('This doesn\'t look like a CC Token Doctor report.');
+          return;
+        }
+        renderDashboard(data);
+      } catch (err) {
+        showToast('Could not parse file: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ---- Render ----
+  function renderDashboard(data) {
+    dropZoneWrapper.style.display = 'none';
+    dashboard.classList.add('active');
+
+    renderHealthBar(data);
+    renderCards(data);
+    renderVerdict(data);
+    renderRecs(data);
+
+    // Re-trigger animations
+    dashboard.querySelectorAll('.card, .section-block').forEach(el => {
+      el.style.animation = 'none';
+      el.offsetHeight; // force reflow
+      el.style.animation = '';
+    });
+  }
+
+  // ---- Health Bar ----
+  function renderHealthBar(data) {
+    const s = data.summary;
+    const cls = statusClass(s.overallHealth);
+    const labelMap = { healthy: 'Healthy', degraded: 'Needs Attention', critical: 'Broken' };
+    const label = labelMap[cls] || s.overallHealth;
+
+    const from = formatDate(s.dateRange?.from);
+    const to = formatDate(s.dateRange?.to);
+
+    document.getElementById('health-bar').innerHTML = `
+      <div class="health-status">
+        <span class="status-badge ${cls}"><span class="dot"></span>${escapeHtml(label)}</span>
+      </div>
+      <div class="health-meta">
+        <strong>${s.sessionCount || 0}</strong> sessions &middot; <strong>${s.totalTurns || 0}</strong> turns<br>
+        ${escapeHtml(from)} &ndash; ${escapeHtml(to)}
+      </div>
+    `;
+  }
+
+  // ---- Cards ----
+  function renderCards(data) {
+    const grid = document.getElementById('cards-grid');
+    grid.innerHTML = '';
+
+    grid.appendChild(buildCacheCard(data.cache));
+    grid.appendChild(buildTTLCard(data.cacheTTL));
+    grid.appendChild(buildTokenCard(data.tokenBurn));
+    grid.appendChild(buildPeakCard(data.peakHours));
+    grid.appendChild(buildSessionCard(data.sessions));
+  }
+
+  // -- Cache Health card --
+  function buildCacheCard(cache) {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const ratio = cache.hitRatio || 0;
+    const ratioPct = Math.round(ratio * 100);
+    const color = ratioPct >= 60 ? 'var(--green)' : ratioPct >= 30 ? 'var(--yellow)' : 'var(--red)';
+    const iconColor = ratioPct >= 60 ? 'green' : ratioPct >= 30 ? 'yellow' : 'red';
+
+    // Ring math (radius 55, circumference ~345.6)
+    const r = 55;
+    const circ = 2 * Math.PI * r;
+    const offset = circ - (circ * ratio);
+
+    // Breakdown
+    const total = (cache.totals?.cacheRead || 0) + (cache.totals?.cacheCreation || 0) + (cache.totals?.input || 0);
+    const readPct = total > 0 ? ((cache.totals.cacheRead || 0) / total * 100) : 0;
+    const createPct = total > 0 ? ((cache.totals.cacheCreation || 0) / total * 100) : 0;
+    const uncachedPct = total > 0 ? ((cache.totals.input || 0) / total * 100) : 0;
+
+    let explain;
+    if (cache.status === 'broken') {
+      explain = '<strong style="color:var(--red)">Your cache is broken</strong> &mdash; the system re-reads everything at full price. Every turn costs the maximum it can.';
+    } else if (cache.status === 'degraded') {
+      explain = `<strong>${ratioPct}%</strong> of your data is being cached. That\'s okay, but there\'s room to save more.`;
+    } else {
+      explain = `<strong>${ratioPct}%</strong> of your data is being cached properly. Your tokens are being used efficiently.`;
+    }
+
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-icon ${iconColor}">&#x1F6E1;&#xFE0F;</div>
+        <div>
+          <div class="card-title">Cache Health</div>
+          <div class="card-subtitle">How well your data is being reused</div>
+        </div>
+      </div>
+      <div class="cache-ring-container">
+        <div class="ring-wrapper">
+          <svg viewBox="0 0 120 120">
+            <circle class="ring-bg" cx="60" cy="60" r="${r}" />
+            <circle class="ring-fill" cx="60" cy="60" r="${r}"
+              stroke="${color}"
+              stroke-dasharray="${circ}"
+              stroke-dashoffset="${circ}"
+              data-target="${offset}" />
+          </svg>
+          <div class="ring-text">
+            <span class="pct" style="color:${color}" data-target="${ratioPct}">0%</span>
+            <span class="label">cached</span>
+          </div>
+        </div>
+        <div class="cache-explain">${explain}</div>
+      </div>
+      <div class="breakdown-bar">
+        <div class="segment" style="width:${readPct}%;background:var(--green)"></div>
+        <div class="segment" style="width:${createPct}%;background:var(--yellow)"></div>
+        <div class="segment" style="width:${uncachedPct}%;background:var(--red)"></div>
+      </div>
+      <div class="breakdown-legend">
+        <div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>Cached reads (${fmt(cache.totals?.cacheRead)})</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--yellow)"></span>New writes (${fmt(cache.totals?.cacheCreation)})</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--red)"></span>Uncached (${fmt(cache.totals?.input)})</div>
+      </div>
+    `;
+
+    // Animate ring after paint
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const ring = card.querySelector('.ring-fill');
+        const pctEl = card.querySelector('.pct');
+        if (ring) ring.style.strokeDashoffset = ring.getAttribute('data-target');
+        if (pctEl) animateNumber(pctEl, 0, ratioPct, 1000, v => v + '%');
+      }, 200);
+    });
+
+    return card;
+  }
+
+  function animateNumber(el, from, to, duration, formatter) {
+    const start = performance.now();
+    function step(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease out cubic
+      const current = Math.round(from + (to - from) * eased);
+      el.textContent = formatter ? formatter(current) : current;
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  // -- Cache TTL card --
+  function buildTTLCard(ttl) {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    let statusHtml, statusCls;
+    if (ttl.status === 'optimal') {
+      statusCls = 'good';
+      statusHtml = '&#x2705; <span><strong>1-hour cache active.</strong> Pauses won\'t break your flow. Your cache survives coffee breaks and distractions.</span>';
+    } else if (ttl.status === 'suboptimal') {
+      statusCls = 'bad';
+      statusHtml = '&#x26A0;&#xFE0F; <span><strong>Your cache expires every 5 minutes.</strong> Any pause kills it. Step away for a call and you come back to a full-price reload.</span>';
+    } else {
+      statusCls = 'mixed';
+      statusHtml = '&#x1F7E1; <span><strong>Mixed cache settings.</strong> Some of your sessions use the 1-hour cache, some don\'t. Consistency would save tokens.</span>';
+    }
+
+    const total = (ttl.fiveMinTotal || 0) + (ttl.oneHourTotal || 0);
+    const fivePct = total > 0 ? (ttl.fiveMinTotal / total * 100) : 0;
+    const hourPct = total > 0 ? (ttl.oneHourTotal / total * 100) : 0;
+
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-icon purple">&#x1F570;&#xFE0F;</div>
+        <div>
+          <div class="card-title">Cache TTL</div>
+          <div class="card-subtitle">How long your cache stays alive</div>
+        </div>
+      </div>
+      <div class="ttl-status ${statusCls}">${statusHtml}</div>
+      <div class="ttl-bars">
+        <div class="ttl-bar-row">
+          <span class="ttl-bar-label">5 min</span>
+          <div class="ttl-bar-track">
+            <div class="ttl-bar-fill" style="width:${fivePct}%;background:var(--red)"></div>
+          </div>
+          <span class="ttl-bar-value">${fmt(ttl.fiveMinTotal)} tokens</span>
+        </div>
+        <div class="ttl-bar-row">
+          <span class="ttl-bar-label">1 hour</span>
+          <div class="ttl-bar-track">
+            <div class="ttl-bar-fill" style="width:${hourPct}%;background:var(--green)"></div>
+          </div>
+          <span class="ttl-bar-value">${fmt(ttl.oneHourTotal)} tokens</span>
+        </div>
+      </div>
+    `;
+
+    return card;
+  }
+
+  // -- Token Usage card --
+  function buildTokenCard(burn) {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const costStr = burn.estimatedCost != null ? '$' + burn.estimatedCost.toFixed(2) : '-';
+    const spikeCountStr = burn.spikeCount > 0
+      ? `<span class="stat-value spike">${burn.spikeCount}</span>`
+      : `<span class="stat-value">0</span>`;
+
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-icon purple">&#x1F4CA;</div>
+        <div>
+          <div class="card-title">Token Usage</div>
+          <div class="card-subtitle">Tokens consumed per turn over time</div>
+        </div>
+      </div>
+      <div class="chart-container"><canvas id="token-chart"></canvas></div>
+      <div class="token-stats">
+        <div class="stat-box">
+          <div class="stat-value">${fmt(burn.avgPerTurn)}</div>
+          <div class="stat-label">Average</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value">${fmt(burn.medianPerTurn)}</div>
+          <div class="stat-label">Median</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value">${fmt(burn.p95PerTurn)}</div>
+          <div class="stat-label">P95</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value cost">${costStr}</div>
+          <div class="stat-label">Est. Cost</div>
+        </div>
+        <div class="stat-box">
+          ${spikeCountStr}
+          <div class="stat-label">Spikes</div>
+        </div>
+      </div>
+    `;
+
+    // Draw chart after element is in DOM
+    requestAnimationFrame(() => {
+      setTimeout(() => drawTokenChart(card.querySelector('#token-chart'), burn.timeline || []), 100);
+    });
+
+    return card;
+  }
+
+  function drawTokenChart(canvas, timeline) {
+    if (!canvas || !timeline.length) return;
+
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+
+    const w = rect.width;
+    const h = rect.height;
+    const pad = { top: 10, right: 10, bottom: 24, left: 50 };
+    const plotW = w - pad.left - pad.right;
+    const plotH = h - pad.top - pad.bottom;
+
+    const values = timeline.map(t => t.total || 0);
+    const maxVal = Math.max(...values, 1);
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = pad.top + plotH - (plotH * i / 4);
+      ctx.beginPath();
+      ctx.moveTo(pad.left, y);
+      ctx.lineTo(w - pad.right, y);
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = '#55556a';
+      ctx.font = '10px Inter, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(fmt(maxVal * i / 4), pad.left - 8, y + 3);
+    }
+
+    // Area + line
+    const gradient = ctx.createLinearGradient(0, pad.top, 0, pad.top + plotH);
+    gradient.addColorStop(0, 'rgba(168, 85, 247, 0.25)');
+    gradient.addColorStop(1, 'rgba(168, 85, 247, 0)');
+
+    ctx.beginPath();
+    ctx.moveTo(pad.left, pad.top + plotH);
+
+    values.forEach((v, i) => {
+      const x = pad.left + (plotW * i / (values.length - 1 || 1));
+      const y = pad.top + plotH - (plotH * v / maxVal);
+      ctx.lineTo(x, y);
+    });
+
+    ctx.lineTo(pad.left + plotW, pad.top + plotH);
+    ctx.closePath();
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // Line on top
+    ctx.beginPath();
+    values.forEach((v, i) => {
+      const x = pad.left + (plotW * i / (values.length - 1 || 1));
+      const y = pad.top + plotH - (plotH * v / maxVal);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = '#a855f7';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // X-axis labels (first and last)
+    if (timeline.length > 0) {
+      ctx.fillStyle = '#55556a';
+      ctx.font = '10px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(formatShort(timeline[0].timestamp), pad.left, h - 4);
+      ctx.textAlign = 'right';
+      ctx.fillText(formatShort(timeline[timeline.length - 1].timestamp), w - pad.right, h - 4);
+    }
+  }
+
+  function formatShort(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+
+  // -- Peak Hours card --
+  function buildPeakCard(peak) {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const dist = peak.hourDistribution || new Array(24).fill(0);
+    const maxH = Math.max(...dist, 1);
+
+    // Build heatmap cells
+    let heatCells = '';
+    for (let i = 0; i < 24; i++) {
+      const intensity = dist[i] / maxH;
+      const isPeak = i >= 12 && i <= 18; // 5-11am PT = 12-18 UTC
+      let bg;
+      if (intensity === 0) {
+        bg = 'var(--border)';
+      } else if (isPeak) {
+        bg = `rgba(239, 68, 68, ${0.2 + intensity * 0.8})`;
+      } else {
+        bg = `rgba(168, 85, 247, ${0.15 + intensity * 0.85})`;
+      }
+      const utcLabel = String(i).padStart(2, '0') + ':00 UTC';
+      const turnLabel = dist[i] + ' turn' + (dist[i] !== 1 ? 's' : '');
+      heatCells += `<div class="heat-cell" style="background:${bg}"><div class="tooltip">${utcLabel} &mdash; ${turnLabel}</div></div>`;
+    }
+
+    // Labels
+    let heatLabels = '';
+    for (let i = 0; i < 24; i += 2) {
+      heatLabels += `<span>${String(i).padStart(2, '0')}</span>`;
+    }
+
+    const ratioPct = Math.round((peak.peakRatio || 0) * 100);
+    const peakCls = peak.status || 'minimal';
+
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-icon blue">&#x1F552;</div>
+        <div>
+          <div class="card-title">Peak Hours</div>
+          <div class="card-subtitle">When you use Claude Code (UTC)</div>
+        </div>
+      </div>
+      <div class="heatmap">${heatCells}</div>
+      <div class="heatmap-labels">${heatLabels}</div>
+      <div class="peak-window-note">
+        You work during Anthropic\'s peak window (12:00&ndash;18:00 UTC)
+        <span class="peak-highlight ${peakCls}">${ratioPct}%</span> of the time.<br>
+        <strong>${peak.peakTurns || 0}</strong> peak turns vs <strong>${peak.offPeakTurns || 0}</strong> off-peak.
+        ${ratioPct > 50
+          ? ' The servers are busiest then &mdash; cache misses and slowdowns are more likely.'
+          : ratioPct > 20
+            ? ' Some peak usage. Shifting more work to off-peak could help.'
+            : ' Most of your usage is off-peak. Great timing.'}
+      </div>
+    `;
+
+    return card;
+  }
+
+  // -- Session Resumes card --
+  function buildSessionCard(sessions) {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const rate = sessions.resumeSuccessRate || 0;
+    const ratePct = Math.round(rate * 100);
+    const barColor = ratePct >= 80 ? 'var(--green)' : ratePct >= 50 ? 'var(--yellow)' : 'var(--red)';
+
+    let detailHtml;
+    if (sessions.resumeBreaks > 0) {
+      detailHtml = `<strong>${sessions.resumeBreaks}</strong> out of <strong>${sessions.totalResumes || 0}</strong> session resumes broke your cache. Each break means the full context was re-sent at full price.`;
+    } else if (sessions.totalResumes > 0) {
+      detailHtml = `All <strong>${sessions.totalResumes}</strong> session resumes kept the cache intact. Your sessions are resuming cleanly.`;
+    } else {
+      detailHtml = 'No session resumes detected in this report.';
+    }
+
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-icon ${ratePct >= 80 ? 'green' : ratePct >= 50 ? 'yellow' : 'red'}">&#x1F504;</div>
+        <div>
+          <div class="card-title">Session Resumes</div>
+          <div class="card-subtitle">Do your sessions survive interruptions?</div>
+        </div>
+      </div>
+      <div class="resume-bar-container">
+        <div class="resume-bar-label">
+          <span>Success rate</span>
+          <span style="font-weight:700;color:${barColor}">${ratePct}%</span>
+        </div>
+        <div class="resume-bar-track">
+          <div class="resume-bar-fill" style="width:${ratePct}%;background:${barColor}"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:14px;">
+        <div class="stat-box" style="flex:1">
+          <div class="stat-value">${sessions.totalSessions || 0}</div>
+          <div class="stat-label">Sessions</div>
+        </div>
+        <div class="stat-box" style="flex:1">
+          <div class="stat-value">${sessions.totalResumes || 0}</div>
+          <div class="stat-label">Resumes</div>
+        </div>
+        <div class="stat-box" style="flex:1">
+          <div class="stat-value" ${sessions.resumeBreaks > 0 ? 'style="color:var(--red)"' : ''}>${sessions.resumeBreaks || 0}</div>
+          <div class="stat-label">Breaks</div>
+        </div>
+      </div>
+      <div class="resume-detail">${detailHtml}</div>
+    `;
+
+    return card;
+  }
+
+  // ---- Verdict ----
+  function renderVerdict(data) {
+    const section = document.getElementById('verdict-section');
+    const lines = data.verdict || [];
+
+    if (!lines.length) {
+      section.style.display = 'none';
+      return;
+    }
+
+    section.style.display = '';
+    let html = '<div class="section-title">&#x1F50D; Verdict</div>';
+
+    lines.forEach(line => {
+      // Pick icon based on content keywords
+      let icon = '&#x2139;&#xFE0F;'; // info
+      const lower = line.toLowerCase();
+      if (lower.includes('broken') || lower.includes('critical') || lower.includes('spike') || lower.includes('problem'))
+        icon = '&#x1F534;';
+      else if (lower.includes('warning') || lower.includes('attention') || lower.includes('degrad'))
+        icon = '&#x1F7E1;';
+      else if (lower.includes('good') || lower.includes('healthy') || lower.includes('great') || lower.includes('optimal'))
+        icon = '&#x1F7E2;';
+
+      html += `<div class="verdict-line"><span class="verdict-icon">${icon}</span><span>${escapeHtml(line)}</span></div>`;
+    });
+
+    section.innerHTML = html;
+  }
+
+  // ---- Recommendations ----
+  function renderRecs(data) {
+    const section = document.getElementById('rec-section');
+    const recs = data.recommendations || [];
+
+    if (!recs.length) {
+      section.style.display = 'none';
+      return;
+    }
+
+    section.style.display = '';
+    let html = '<div class="section-title">&#x1F4A1; Recommendations</div><div class="rec-list">';
+
+    recs.forEach((rec, i) => {
+      const priorityCls = (rec.priority || 'medium').toLowerCase();
+      const priorityLabel = priorityCls.toUpperCase();
+
+      let cmdHtml = '';
+      if (rec.command) {
+        const cmdId = 'cmd-' + i;
+        cmdHtml = `
+          <div class="rec-command">
+            <code id="${cmdId}">${escapeHtml(rec.command)}</code>
+            <button class="btn-copy" data-cmd="${cmdId}">Copy</button>
+          </div>
+        `;
+      }
+
+      html += `
+        <div class="rec-item">
+          <div class="rec-number">${i + 1}</div>
+          <div class="rec-body">
+            <div class="rec-title-row">
+              <span class="rec-title">${escapeHtml(rec.title)}</span>
+              <span class="priority-badge ${priorityCls}">${priorityLabel}</span>
+            </div>
+            <div class="rec-desc">${escapeHtml(rec.description)}</div>
+            ${cmdHtml}
+          </div>
+        </div>
+      `;
+    });
+
+    html += '</div>';
+    section.innerHTML = html;
+
+    // Copy buttons
+    section.querySelectorAll('.btn-copy').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cmdEl = document.getElementById(btn.getAttribute('data-cmd'));
+        if (!cmdEl) return;
+        navigator.clipboard.writeText(cmdEl.textContent).then(() => {
+          btn.textContent = 'Copied!';
+          btn.classList.add('copied');
+          setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+        }).catch(() => {
+          // Fallback
+          const range = document.createRange();
+          range.selectNodeContents(cmdEl);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          try { document.execCommand('copy'); btn.textContent = 'Copied!'; }
+          catch(e) { btn.textContent = 'Failed'; }
+          sel.removeAllRanges();
+          setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+        });
+      });
+    });
+  }
+
+  // ---- Also allow full-page drop ----
+  document.addEventListener('dragover', e => e.preventDefault());
+  document.addEventListener('drop', e => {
+    e.preventDefault();
+    if (dashboard.classList.contains('active')) return; // only on landing
+    const file = e.dataTransfer.files[0];
+    if (file) loadFile(file);
+  });
+
+})();
+</script>
+</body>
+</html>

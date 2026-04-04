@@ -1,0 +1,36 @@
+{
+  "name": "cc-token-doctor",
+  "version": "1.0.0",
+  "description": "Diagnose and fix Claude Code's token drain problem. Built on research by Rangizingo, flightlesstux, kitaekatt, and the Claude Code community.",
+  "bin": {
+    "cc-token-doctor": "./bin/cli.js"
+  },
+  "scripts": {
+    "start": "node bin/cli.js",
+    "diagnose": "node bin/cli.js --diagnose-only",
+    "dashboard": "node bin/cli.js --dashboard"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "token",
+    "cache",
+    "diagnostic",
+    "prompt-caching",
+    "optimization"
+  ],
+  "author": "Marta S. (Firecracker)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/martusha89/cc-token-doctor"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "dashboard/"
+  ]
+}

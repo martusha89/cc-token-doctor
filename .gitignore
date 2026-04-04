@@ -1,0 +1,4 @@
+node_modules/
+*.log
+cc-token-doctor-report.json
+.cc-token-doctor/

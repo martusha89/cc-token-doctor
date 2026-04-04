@@ -1,9 +1,9 @@
 {
   "name": "cc-token-doctor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Diagnose and fix Claude Code's token drain problem. Built on research by Rangizingo, flightlesstux, kitaekatt, and the Claude Code community.",
   "bin": {
-    "cc-token-doctor": "./bin/cli.js"
+    "cc-token-doctor": "bin/cli.js"
   },
   "scripts": {
     "start": "node bin/cli.js",
@@ -23,7 +23,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/martusha89/cc-token-doctor"
+    "url": "git+https://github.com/martusha89/cc-token-doctor.git"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -115,7 +115,7 @@ function credits() {
 function reportSaved(filePath) {
   console.log();
   info(`Report saved to ${c.bold}${filePath}${c.reset}`);
-  info(`Open the dashboard and drop the file in for the full visual report.`);
+  info(`Dashboard: ${c.bold}${c.cyan}https://aidhd.co/token-doctor${c.reset} — drop the file in for the full visual report.`);
 }
 
 function spinner(text) {

@@ -299,4 +299,81 @@ function applyPatchById(patchId) {
   return patch.apply({});
 }
 
-module.exports = { getAvailablePatches, applyPatch: applyPatchById, getRecommendedPatches, findClaudeBinary };
+function verifyPatches() {
+  const results = [];
+
+  // Check env-attribution
+  if (process.platform === 'win32') {
+    try {
+      const val = execSync('reg query "HKCU\\Environment" /v CLAUDE_CODE_ATTRIBUTION_HEADER 2>nul', {
+        encoding: 'utf8', timeout: 5000,
+      });
+      const intact = val.includes('0x0') || val.includes('REG_SZ') && val.includes('0');
+      results.push({ id: 'env-attribution', intact, detail: intact ? 'still active' : 'not set in registry' });
+    } catch {
+      // Fallback: check current process env (works if terminal was reopened after setx)
+      const intact = process.env.CLAUDE_CODE_ATTRIBUTION_HEADER === '0';
+      results.push({ id: 'env-attribution', intact, detail: intact ? 'active in current session' : 'not set' });
+    }
+  } else {
+    const home = os.homedir();
+    const profiles = ['.zshrc', '.bashrc', '.bash_profile', '.profile'].map(f => path.join(home, f));
+    let found = false;
+    for (const f of profiles) {
+      try {
+        if (fs.readFileSync(f, 'utf8').includes('CLAUDE_CODE_ATTRIBUTION_HEADER')) { found = true; break; }
+      } catch {}
+    }
+    if (!found) found = process.env.CLAUDE_CODE_ATTRIBUTION_HEADER === '0';
+    results.push({ id: 'env-attribution', intact: found, detail: found ? 'still active' : 'not set' });
+  }
+
+  // Check binary patches
+  const binary = findClaudeBinary();
+  if (!binary) {
+    results.push({ id: 'cache-ttl', intact: false, detail: 'Claude Code installation not found' });
+    results.push({ id: 'cache-prefix', intact: false, detail: 'Claude Code installation not found' });
+    return results;
+  }
+
+  const bundlePath = findMainBundle(binary);
+  if (!bundlePath) {
+    results.push({ id: 'cache-ttl', intact: false, detail: 'JS bundle not found' });
+    results.push({ id: 'cache-prefix', intact: false, detail: 'JS bundle not found' });
+    return results;
+  }
+
+  let content;
+  try {
+    content = fs.readFileSync(bundlePath, 'utf8');
+  } catch {
+    results.push({ id: 'cache-ttl', intact: false, detail: 'cannot read bundle' });
+    results.push({ id: 'cache-prefix', intact: false, detail: 'cannot read bundle' });
+    return results;
+  }
+
+  // cache-ttl: patched = ephemeral_1h present, ephemeral_5m absent
+  const has5m = content.includes('ephemeral_5m');
+  const has1h = content.includes('ephemeral_1h');
+  if (has1h && !has5m) {
+    results.push({ id: 'cache-ttl', intact: true, detail: 'still patched (1-hour TTL)' });
+  } else if (!has5m && !has1h) {
+    // Bundle format changed entirely — can't tell
+    results.push({ id: 'cache-ttl', intact: false, detail: 'bundle format changed — cannot verify' });
+  } else {
+    results.push({ id: 'cache-ttl', intact: false, detail: 'overwritten — back to 5-minute TTL' });
+  }
+
+  // cache-prefix: patched = deferred_tools_delta filter is ABSENT
+  const hasDeltaFilter = /type:\s*"deferred_tools_delta"/.test(content);
+  if (!hasDeltaFilter) {
+    // Could be patched, or could be a newer CC version that fixed it natively
+    results.push({ id: 'cache-prefix', intact: true, detail: 'still patched (deltas persisted)' });
+  } else {
+    results.push({ id: 'cache-prefix', intact: false, detail: 'overwritten — session deltas not being saved' });
+  }
+
+  return results;
+}
+
+module.exports = { getAvailablePatches, applyPatch: applyPatchById, getRecommendedPatches, findClaudeBinary, findMainBundle, verifyPatches };

@@ -1,10 +1,10 @@
 // Diagnostic engine — analyzes session data, produces a plain-English report
 // No dependencies, pure logic
 
-function diagnose(scanResults) {
-  const turns = scanResults.allTurns.filter(t => t.type === 'assistant' && t.usage);
+function diagnose(scanResults, options = {}) {
+  const allTurns = scanResults.allTurns.filter(t => t.type === 'assistant' && t.usage);
 
-  if (turns.length === 0) {
+  if (allTurns.length === 0) {
     return {
       overallHealth: 'unknown',
       cacheHealth: null,
@@ -15,7 +15,28 @@ function diagnose(scanResults) {
       verdictLines: ['No assistant messages with usage data found. Run some Claude Code sessions first.'],
       recommendations: [],
       raw: {},
+      fixAware: null,
     };
+  }
+
+  const fixTimestamp = options.fixTimestamp;
+  let turns = allTurns;
+  let preFixTurns = [];
+  let usingPostFixOnly = false;
+  let postFixCount = 0;
+
+  if (fixTimestamp) {
+    const fixTime = fixTimestamp.getTime();
+    const postFix = allTurns.filter(t => new Date(t.timestamp).getTime() > fixTime);
+    preFixTurns = allTurns.filter(t => new Date(t.timestamp).getTime() <= fixTime);
+    postFixCount = postFix.length;
+
+    // Need at least 10 post-fix messages for a meaningful diagnosis
+    if (postFix.length >= 10) {
+      turns = postFix;
+      usingPostFixOnly = true;
+    }
+    // Otherwise use all data but flag it
   }
 
   const cache = analyzeCacheHealth(turns);
@@ -26,6 +47,32 @@ function diagnose(scanResults) {
 
   const { overallHealth, verdictLines } = generateVerdict(cache, peak, burn, ttl, sessions);
   const recommendations = generateRecommendations(cache, peak, burn, ttl, sessions);
+
+  // Build comparison if we have enough pre-fix and post-fix data
+  let comparison = null;
+  if (usingPostFixOnly && preFixTurns.length >= 5) {
+    const preFix = {
+      cache: analyzeCacheHealth(preFixTurns),
+      ttl: analyzeCacheTTL(preFixTurns),
+      burn: analyzeTokenBurn(preFixTurns),
+    };
+    comparison = {
+      before: {
+        hitRatio: preFix.cache.hitRatio,
+        cacheStatus: preFix.cache.status,
+        ttlRatio: preFix.ttl.oneHourRatio,
+        ttlStatus: preFix.ttl.status,
+        avgTokensPerTurn: preFix.burn.avgPerTurn,
+      },
+      after: {
+        hitRatio: cache.hitRatio,
+        cacheStatus: cache.status,
+        ttlRatio: ttl.oneHourRatio,
+        ttlStatus: ttl.status,
+        avgTokensPerTurn: burn.avgPerTurn,
+      },
+    };
+  }
 
   return {
     overallHealth,
@@ -44,6 +91,14 @@ function diagnose(scanResults) {
       },
       sessionCount: scanResults.sessionCount,
     },
+    fixAware: fixTimestamp ? {
+      fixTimestamp: fixTimestamp.toISOString(),
+      usingPostFixOnly,
+      postFixTurns: postFixCount,
+      preFixTurns: preFixTurns.length,
+      totalTurns: allTurns.length,
+    } : null,
+    comparison,
   };
 }
 

@@ -9,8 +9,9 @@ const path = require('path');
 const { scanAll } = require('../src/scanner');
 const { diagnose } = require('../src/diagnose');
 const { generateReport, saveReport, getDefaultReportPath } = require('../src/report');
-const { getRecommendedPatches, applyPatch, getAvailablePatches, findClaudeBinary } = require('../src/patches');
+const { getRecommendedPatches, applyPatch, getAvailablePatches, findClaudeBinary, verifyPatches } = require('../src/patches');
 const { restoreAll, listBackups } = require('../src/backup');
+const { hasAppliedFixes, getAppliedFixes, getFixTimestamp, recordFixApplied, clearFixRecord } = require('../src/state');
 const ui = require('../src/display');
 
 const args = process.argv.slice(2);
@@ -55,16 +56,49 @@ async function main() {
     process.exit(0);
   }
 
-  // Step 2: Diagnose
+  // Step 2: Check if fixes were previously applied
+  let fixTimestamp = null;
+  let patchesWiped = false;
+
+  if (hasAppliedFixes()) {
+    const appliedFixes = getAppliedFixes();
+    const verifyResults = verifyPatches();
+    const status = ui.patchStatus(verifyResults, appliedFixes);
+
+    if (status && status.anyWiped) {
+      patchesWiped = true;
+      console.log();
+      const reapply = await ask(
+        `${ui.c.bold}Reapply the wiped fixes now? ${ui.c.dim}[Y/n]${ui.c.reset} `
+      );
+      if (reapply.toLowerCase() !== 'n') {
+        await handleReapply(verifyResults, appliedFixes);
+      }
+    }
+
+    fixTimestamp = getFixTimestamp();
+  }
+
+  // Step 3: Diagnose (fix-aware if fixes were applied)
   ui.section('Analyzing');
   const diagSpin = ui.spinner('Running diagnostics...');
-  const diagnosis = diagnose(scanResults);
+  const diagnosis = diagnose(scanResults, { fixTimestamp });
   diagSpin.stop('Diagnosis complete');
 
-  // Step 3: Display results
+  // Show fix-aware context if applicable
+  if (diagnosis.fixAware) {
+    ui.fixAwareNote(diagnosis.fixAware);
+  }
+
+  // Step 4: Display results
   displayResults(diagnosis);
 
-  // Step 4: Save report
+  // Show before/after comparison if we have enough data
+  if (diagnosis.comparison) {
+    ui.comparison(diagnosis.comparison);
+  }
+
+  // Step 5: Save report
   const report = generateReport(scanResults, diagnosis);
   const reportPath = getDefaultReportPath();
   saveReport(report, reportPath);
@@ -81,8 +115,8 @@ async function main() {
     }
   }
 
-  // Step 5: Offer fixes (unless --diagnose-only)
-  if (!flags.has('--diagnose-only') && diagnosis.overallHealth !== 'healthy') {
+  // Step 6: Offer fixes (unless --diagnose-only)
+  if (!flags.has('--diagnose-only') && diagnosis.overallHealth !== 'healthy' && !patchesWiped) {
     await handleFix(diagnosis);
   }
 
@@ -259,9 +293,18 @@ async function handleFix(diagnosis) {
     ui.info(`${ui.c.bold}${patch.name}${ui.c.reset}`);
     const results = applyPatch(patch.id);
 
+    let patchSucceeded = false;
     for (const r of results) {
-      if (r.success) ui.ok(r.detail);
-      else ui.bad(r.detail);
+      if (r.success) {
+        ui.ok(r.detail);
+        patchSucceeded = true;
+      } else {
+        ui.bad(r.detail);
+      }
+    }
+
+    if (patchSucceeded) {
+      recordFixApplied(patch.id);
     }
     applied++;
   }
@@ -274,6 +317,43 @@ async function handleFix(diagnosis) {
     console.log(`  ${ui.c.cyan}npx cc-token-doctor --undo${ui.c.reset}`);
   } else {
     ui.dim('No fixes applied.');
+  }
+}
+
+async function handleReapply(verifyResults, appliedFixes) {
+  ui.section('Reapplying Fixes');
+
+  let reapplied = 0;
+  for (const result of verifyResults) {
+    // Only reapply patches that were previously applied and are now wiped
+    if (!appliedFixes[result.id] || result.intact) continue;
+
+    console.log();
+    ui.info(`${ui.c.bold}${result.id}${ui.c.reset}`);
+    const results = applyPatch(result.id);
+
+    let patchSucceeded = false;
+    for (const r of results) {
+      if (r.success) {
+        ui.ok(r.detail);
+        patchSucceeded = true;
+      } else {
+        ui.bad(r.detail);
+      }
+    }
+
+    if (patchSucceeded) {
+      recordFixApplied(result.id);
+      reapplied++;
+    }
+  }
+
+  console.log();
+  if (reapplied > 0) {
+    ui.ok(`${reapplied} fix${reapplied === 1 ? '' : 'es'} reapplied. Restart Claude Code for changes to take effect.`);
+  } else {
+    ui.warning('Could not reapply fixes — Claude Code bundle may have changed format.');
+    ui.dim('Try updating cc-token-doctor: npx cc-token-doctor@latest');
   }
 }
 
@@ -309,6 +389,10 @@ function handleUndo() {
     if (r.success) ui.ok(r.detail);
     else ui.bad(r.detail);
   }
+
+  // Clear fix records for binary patches (env var stays — it's harmless)
+  clearFixRecord('cache-ttl');
+  clearFixRecord('cache-prefix');
 
   console.log();
   ui.info('Restored to pre-patch state. Restart Claude Code.');

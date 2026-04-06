@@ -98,6 +98,116 @@ function recommendations(recs) {
   }
 }
 
+function patchStatus(verifyResults, appliedFixes) {
+  section('Patch Status');
+  const fixIds = Object.keys(appliedFixes);
+  if (fixIds.length === 0) {
+    dim('No fixes have been applied yet.');
+    return;
+  }
+
+  let allIntact = true;
+  let anyWiped = false;
+
+  for (const result of verifyResults) {
+    // Only show status for patches the user actually applied
+    if (!appliedFixes[result.id]) continue;
+
+    if (result.intact) {
+      ok(`${getPatchName(result.id)} ${c.dim}— ${result.detail}${c.reset}`);
+    } else {
+      bad(`${getPatchName(result.id)} ${c.dim}— ${result.detail}${c.reset}`);
+      allIntact = false;
+      anyWiped = true;
+    }
+  }
+
+  // Show when fixes were applied
+  const times = Object.values(appliedFixes).map(f => f.appliedAt).filter(Boolean);
+  if (times.length > 0) {
+    const earliest = new Date(Math.min(...times.map(t => new Date(t).getTime())));
+    dim(`Fixes applied: ${formatTimeAgo(earliest)}`);
+  }
+
+  if (anyWiped) {
+    console.log();
+    warning(`Claude Code was updated since you applied fixes. Binary patches were lost.`);
+  }
+
+  return { allIntact, anyWiped };
+}
+
+function comparison(comp) {
+  if (!comp) return;
+
+  section('Before vs After Fixes');
+  console.log();
+
+  const bHit = comp.before.hitRatio;
+  const aHit = comp.after.hitRatio;
+  const hitDelta = aHit - bHit;
+  const hitArrow = hitDelta > 0 ? `${c.green}+${(hitDelta * 100).toFixed(1)}%${c.reset}` :
+                   hitDelta < 0 ? `${c.red}${(hitDelta * 100).toFixed(1)}%${c.reset}` :
+                   `${c.dim}no change${c.reset}`;
+
+  console.log(`  Cache hit ratio:  ${percentage(bHit)} ${c.dim}->${c.reset} ${percentage(aHit)}  ${hitArrow}`);
+
+  const bTTL = comp.before.ttlRatio;
+  const aTTL = comp.after.ttlRatio;
+  const ttlDelta = aTTL - bTTL;
+  const ttlArrow = ttlDelta > 0 ? `${c.green}+${(ttlDelta * 100).toFixed(1)}%${c.reset}` :
+                   ttlDelta < 0 ? `${c.red}${(ttlDelta * 100).toFixed(1)}%${c.reset}` :
+                   `${c.dim}no change${c.reset}`;
+
+  console.log(`  1-hour TTL ratio: ${percentage(bTTL)} ${c.dim}->${c.reset} ${percentage(aTTL)}  ${ttlArrow}`);
+
+  const bAvg = comp.before.avgTokensPerTurn;
+  const aAvg = comp.after.avgTokensPerTurn;
+  const saved = bAvg - aAvg;
+  if (saved > 0) {
+    console.log(`  Avg tokens/msg:   ${c.bold}${tokenCount(bAvg)}${c.reset} ${c.dim}->${c.reset} ${c.bold}${tokenCount(aAvg)}${c.reset}  ${c.green}saving ~${tokenCount(saved)}/msg${c.reset}`);
+  } else {
+    console.log(`  Avg tokens/msg:   ${c.bold}${tokenCount(bAvg)}${c.reset} ${c.dim}->${c.reset} ${c.bold}${tokenCount(aAvg)}${c.reset}`);
+  }
+
+  console.log();
+}
+
+function fixAwareNote(fixAware) {
+  if (!fixAware) return;
+
+  if (fixAware.usingPostFixOnly) {
+    info(`Analyzing ${c.bold}${fixAware.postFixTurns}${c.reset} messages since fixes were applied ${c.dim}(ignoring ${fixAware.preFixTurns} pre-fix messages)${c.reset}`);
+  } else if (fixAware.postFixTurns > 0 && fixAware.postFixTurns < 10) {
+    warning(`Only ${fixAware.postFixTurns} messages since fixes were applied — not enough to measure impact yet.`);
+    dim(`Using all ${fixAware.totalTurns} messages for now. Run more sessions, then check again.`);
+  }
+}
+
+function getPatchName(id) {
+  const names = {
+    'env-attribution': 'Attribution Header',
+    'cache-ttl': 'Cache TTL (1-hour)',
+    'cache-prefix': 'Cache Prefix Stabilizer',
+  };
+  return names[id] || id;
+}
+
+function formatTimeAgo(date) {
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHrs = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 2) return 'just now';
+  if (diffMins < 60) return `${diffMins} minutes ago`;
+  if (diffHrs < 24) return `${diffHrs} hour${diffHrs === 1 ? '' : 's'} ago`;
+  if (diffDays === 1) return 'yesterday';
+  if (diffDays < 30) return `${diffDays} days ago`;
+  return date.toLocaleDateString();
+}
+
 function credits() {
   console.log();
   dim('─────────────────────────────────────────────────────');
@@ -140,4 +250,5 @@ module.exports = {
   c, banner, ok, bad, warning, info, dim, section,
   progressBar, percentage, tokenCount,
   verdict, recommendations, credits, reportSaved, spinner,
+  patchStatus, comparison, fixAwareNote,
 };

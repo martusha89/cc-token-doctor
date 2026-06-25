@@ -1,6 +1,12 @@
-# CC Token Doctor
+<div align="center">
 
-**Diagnose and fix Claude Code's token drain problem.**
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:8B5CF6,100:22D3EE&height=170&section=header&text=cc-token-doctor&fontColor=ffffff&fontSize=44&fontAlignY=40&desc=Diagnose%20and%20fix%20Claude%20Code's%20token%20drain&descSize=17&descAlignY=64" width="100%" />
+
+[![npm version](https://img.shields.io/npm/v/cc-token-doctor?style=for-the-badge&logo=npm&logoColor=white&color=8B5CF6)](https://www.npmjs.com/package/cc-token-doctor)
+[![license MIT](https://img.shields.io/badge/license-MIT-A855F7?style=for-the-badge)](LICENSE)
+[![aidhd.co](https://img.shields.io/badge/aidhd.co-22D3EE?style=for-the-badge&labelColor=0D1117)](https://aidhd.co)
+
+</div>
 
 Since late March 2026, Claude Code users have been burning through tokens at 10-20x the expected rate. Max 5x subscribers ($100/month) exhaust session windows in 90 minutes. Max 20x users ($200/month) hit 100% on a single prompt.
 
